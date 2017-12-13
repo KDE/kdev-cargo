@@ -2,7 +2,7 @@ add_definitions(-DTRANSLATION_DOMAIN=\"kdevcargo\")
 
 ecm_qt_declare_logging_category(cargo_LOG_SRCS
     HEADER debug.h
-    IDENTIFIER CUSTOMBUILDSYSTEM
+    IDENTIFIER KDEV_CARGO
     CATEGORY_NAME "kdevelop.projectmanagers.cargo"
 )
 ## KDevelop Plugin
