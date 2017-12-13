@@ -10,9 +10,12 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMQtDeclareLoggingCategory)
 include(ECMInstallIcons)
+include(FeatureSummary)
 
 find_package(KDevPlatform 5.0 REQUIRED)
 find_package(KF5 5.15.0 REQUIRED COMPONENTS ItemModels)
 
 add_subdirectory(src)
 add_subdirectory(icons)
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
