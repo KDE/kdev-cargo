@@ -13,7 +13,10 @@ include(ECMInstallIcons)
 include(FeatureSummary)
 
 find_package(KDevPlatform 5.0 REQUIRED)
-find_package(KF5 5.15.0 REQUIRED COMPONENTS ItemModels)
+find_package(KF5 5.15.0 REQUIRED COMPONENTS
+    I18n
+    ItemModels # needed because missing in KDevPlatformConfig.cmake, remove once dep on kdevplatform >=5.2.2
+)
 
 add_subdirectory(src)
 add_subdirectory(icons)
