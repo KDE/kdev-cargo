@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(kdevcargo)
 
-find_package(ECM 1.0.0 REQUIRED NO_MODULE)
+find_package(ECM 5.15.0 REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 include(KDEInstallDirs)
