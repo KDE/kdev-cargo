@@ -2,14 +2,21 @@
     "KPlugin": {
         "Authors": [
             {
-                "Name": "Miha Ćančula"
+                "Name": "Miha Ćančula",
+                "Name[x-test]": "xxMiha Ćančulaxx"
             }
         ],
         "Category": "Project Management",
         "Description": "Allows to use Cargo to build Rust projects",
+        "Description[ca]": "Permet emprar el Cargo per a crear els projectes en Rust",
+        "Description[nl]": "Staat toe Cargo te gebruiken voor bouwen van projecten met Rust",
+        "Description[pt]": "Permite usar o Cargo para compilar os projectos do Rust",
+        "Description[uk]": "Надає змогу використовувати Cargo для збирання проектів Rust",
+        "Description[x-test]": "xxAllows to use Cargo to build Rust projectsxx",
         "Icon": "cargo",
         "Id": "KDevCargo",
         "Name": "Cargo",
+        "Name[x-test]": "xxCargoxx",
         "ServiceTypes": [
             "KDevelop/Plugin"
         ]
