@@ -8,6 +8,7 @@
         ],
         "Category": "Project Management",
         "Description": "Allows to use Cargo to build Rust projects",
+        "Description[ca@valencia]": "Permet emprar el Cargo per a crear els projectes en Rust",
         "Description[ca]": "Permet emprar el Cargo per a crear els projectes en Rust",
         "Description[es]": "Permite usar Cargo para compilar proyectos de Rust",
         "Description[nl]": "Staat toe Cargo te gebruiken voor bouwen van projecten met Rust",
