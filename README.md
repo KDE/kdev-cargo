@@ -1,8 +1,6 @@
 # KDevelop plugin with support for Cargo
 
-[![Codefresh build status]( https://g.codefresh.io/api/badges/build?repoOwner=Noughmad&repoName=kdevcargo&branch=master&accountName=Noughmad&pipelineName=kdevcargo&type=cf-1)]( https://g.codefresh.io/repositories/Noughmad/kdevcargo/builds?filter=trigger:build;branch:master;service:591d7e9809f4a600015ecd49~kdevcargo)
-
-This plugin enables the use of Cargo to manage, build and run Rust packages (crates) with Cargo.
+This plugin enables the use of Cargo to manage, build and run Rust packages (crates) with [Cargo](https://crates.io/).
 
 ## Features
 
@@ -16,6 +14,7 @@ This plugin enables the use of Cargo to manage, build and run Rust packages (cra
 This plugin supports KDevelop 5, so make sure have kdevplatform libraries development headers (`kdevplatform-dev` on ubuntu) version 5 or later.
 You also need `cmake` and `extra-cmake-modules` to build it.
 To use the plugin, the `cargo` executable must be installed and in your `PATH`.
+Instructions for installing Rust and Cargo are available at [http://doc.crates.io/](http://doc.crates.io/).
 
 Download this repository, then run
 
