@@ -89,9 +89,7 @@ public:
     bool removeTarget( KDevelop::ProjectTargetItem* target ) override;
     QList<KDevelop::ProjectTargetItem*> targets( KDevelop::ProjectFolderItem* ) const override;
 
-#if KDEVPLATFORM_VERSION >= VERSION_5_2
     QString extraArguments(KDevelop::ProjectBaseItem* item) const override;
-#endif
 
 // IPlugin API
 public:
@@ -103,11 +101,7 @@ public:
     QStringList arguments(KDevelop::ILaunchConfiguration* config, QString& error) const override;
     KJob* dependencyJob(KDevelop::ILaunchConfiguration* config) const override;
 
-#if KDEVPLATFORM_VERSION >= VERSION_5_2
     QString environmentProfileName(KDevelop::ILaunchConfiguration* config) const override;
-#else
-    QString environmentGroup(KDevelop::ILaunchConfiguration* config) const override;
-#endif
 
     QString nativeAppConfigTypeId() const override;
     QString terminal(KDevelop::ILaunchConfiguration* config) const override;
