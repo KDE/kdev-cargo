@@ -37,6 +37,7 @@
 #include <interfaces/context.h>
 
 #include "cargobuildjob.h"
+#include "cargofindtestsjob.h"
 #include "cargoexecutionconfig.h"
 #include "debug.h"
 
@@ -69,6 +70,8 @@ CargoPlugin::CargoPlugin( QObject *parent, const QVariantList & )
     m_runTestsAction = new QAction(this);
     m_runTestsAction->setIcon(QIcon::fromTheme(QStringLiteral("system-run")));
     m_runTestsAction->setText(i18n("Run Cargo Tests"));
+
+    QLoggingCategory::setFilterRules(QStringLiteral("kdevelop.projectmanagers.cargo.debug = true"));
 }
 
 CargoPlugin::~CargoPlugin()
@@ -285,17 +288,21 @@ KDevelop::ContextMenuExtension CargoPlugin::contextMenuExtension(KDevelop::Conte
 void CargoPlugin::runBuildTestsJob(KDevelop::ProjectBaseItem* item, bool run)
 {
     CargoBuildJob* job = new CargoBuildJob(this, item, QStringLiteral("test"));
-    if (!run)
+    if (run)
     {
-        job->setRunArguments({ QStringLiteral("--no-run") });
+        job->setRunArguments({ QStringLiteral("--all") });
+        job->setStandardViewType(KDevelop::IOutputView::RunView);
+    }
+    else
+    {
+        job->setRunArguments({ QStringLiteral("--all"), QStringLiteral("--no-run") });
+        job->setStandardViewType(KDevelop::IOutputView::BuildView);
     }
 
-    /*
     connect(job, &KJob::finished, [this, item](){
-        CargoListTestsJob* listTestsJob = new CargoListTestsJob(this, item);
-        core()->runController()->registerJob(listTestsJob);
+        CargoFindTestsJob* findTestsJob = new CargoFindTestsJob(this, item);
+        core()->runController()->registerJob(findTestsJob);
     });
-    */
 
     core()->runController()->registerJob(job);
 }

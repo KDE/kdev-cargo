@@ -10,6 +10,7 @@ set(cargo_SRCS
     cargoplugin.cpp
     cargobuildjob.cpp
     cargoexecutionconfig.cpp
+    cargofindtestsjob.cpp
     ${cargo_LOG_SRCS}
 )
 
