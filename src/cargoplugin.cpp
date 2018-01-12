@@ -33,9 +33,12 @@
 #include <interfaces/icore.h>
 #include <interfaces/iruncontroller.h>
 #include <interfaces/ilaunchconfiguration.h>
+#include <interfaces/contextmenuextension.h>
+#include <interfaces/context.h>
 
 #include "cargobuildjob.h"
 #include "cargoexecutionconfig.h"
+#include "debug.h"
 
 using KDevelop::ProjectTargetItem;
 using KDevelop::ProjectFolderItem;
@@ -58,6 +61,14 @@ CargoPlugin::CargoPlugin( QObject *parent, const QVariantList & )
     m_configType = new CargoExecutionConfigType();
     m_configType->addLauncher( new CargoLauncher( this ) );
     core()->runController()->addConfigurationType( m_configType );
+
+    m_buildTestsAction = new QAction(this);
+    m_buildTestsAction->setIcon(QIcon::fromTheme(QStringLiteral("preflight-verifier")));
+    m_buildTestsAction->setText(i18n("Build Cargo Tests"));
+
+    m_runTestsAction = new QAction(this);
+    m_runTestsAction->setIcon(QIcon::fromTheme(QStringLiteral("system-run")));
+    m_runTestsAction->setText(i18n("Run Cargo Tests"));
 }
 
 CargoPlugin::~CargoPlugin()
@@ -238,6 +249,55 @@ QString CargoPlugin::extraArguments(KDevelop::ProjectBaseItem* item) const
 {
     Q_UNUSED(item);
     return QString();
+}
+
+KDevelop::ContextMenuExtension CargoPlugin::contextMenuExtension(KDevelop::Context* context, QWidget* parent)
+{
+    Q_UNUSED(parent);
+    KDevelop::ContextMenuExtension menuExt;
+
+    if (context->hasType(KDevelop::Context::ProjectItemContext))
+    {
+        KDevelop::ProjectItemContext* projectContext = static_cast<KDevelop::ProjectItemContext*>(context);
+
+        if (projectContext->items().size() == 1)
+        {
+            auto item = projectContext->items().first();
+            if (item->isProjectRoot() && item->project()->buildSystemManager() == this)
+            {
+                m_buildTestsAction->disconnect();
+                connect(m_buildTestsAction, &QAction::triggered, this, [this, item](){
+                    runBuildTestsJob(item, false);
+                });
+                m_runTestsAction->disconnect();
+                connect(m_runTestsAction, &QAction::triggered, this, [this, item](){
+                    runBuildTestsJob(item, true);
+                });
+                menuExt.addAction(KDevelop::ContextMenuExtension::RunGroup, m_buildTestsAction);
+                menuExt.addAction(KDevelop::ContextMenuExtension::RunGroup, m_runTestsAction);
+            }
+        }
+    }
+
+    return menuExt;
+}
+
+void CargoPlugin::runBuildTestsJob(KDevelop::ProjectBaseItem* item, bool run)
+{
+    CargoBuildJob* job = new CargoBuildJob(this, item, QStringLiteral("test"));
+    if (!run)
+    {
+        job->setRunArguments({ QStringLiteral("--no-run") });
+    }
+
+    /*
+    connect(job, &KJob::finished, [this, item](){
+        CargoListTestsJob* listTestsJob = new CargoListTestsJob(this, item);
+        core()->runController()->registerJob(listTestsJob);
+    });
+    */
+
+    core()->runController()->registerJob(job);
 }
 
 #include "cargoplugin.moc"

@@ -96,6 +96,8 @@ public:
     int perProjectConfigPages() const override;
     KDevelop::ConfigPage* perProjectConfigPage(int number, const KDevelop::ProjectConfigOptions& options, QWidget* parent) override;
 
+    KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context, QWidget* parent) override;
+
 // IExecutePlugin API
     QUrl executable(KDevelop::ILaunchConfiguration* config, QString& error) const override;
     QStringList arguments(KDevelop::ILaunchConfiguration* config, QString& error) const override;
@@ -112,7 +114,11 @@ public:
     void unload() override;
 
 private:
+    void runBuildTestsJob(KDevelop::ProjectBaseItem* item, bool run);
+
     CargoExecutionConfigType* m_configType;
+    QAction* m_buildTestsAction;
+    QAction* m_runTestsAction;
 };
 
 #endif
