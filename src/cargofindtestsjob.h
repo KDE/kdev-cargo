@@ -55,6 +55,7 @@ private slots:
     void procError(const QString& suiteName, QProcess::ProcessError);
 private:
     void addSuiteCases(const QString& suiteName, const QStringList& lines);
+    void addIgnoredCases(const QString& suiteName, const QStringList& lines);
 
     CargoPlugin* plugin;
     KDevelop::IProject* project;
@@ -63,6 +64,7 @@ private:
     QList<KDevelop::CommandExecutor*> executors;
     int numExecutorsFinished;
     QHash<QString, QStringList> suiteCases;
+    QHash<QString, QStringList> ignoredCases;
 
     bool killed;
     bool enabled;

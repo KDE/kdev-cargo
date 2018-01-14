@@ -35,6 +35,7 @@
 #include <interfaces/ilaunchconfiguration.h>
 #include <interfaces/contextmenuextension.h>
 #include <interfaces/context.h>
+#include <interfaces/iprojectcontroller.h>
 
 #include "cargobuildjob.h"
 #include "cargofindtestsjob.h"
@@ -72,6 +73,14 @@ CargoPlugin::CargoPlugin( QObject *parent, const QVariantList & )
     m_runTestsAction->setText(i18n("Run Cargo Tests"));
 
     QLoggingCategory::setFilterRules(QStringLiteral("kdevelop.projectmanagers.cargo.debug = true"));
+
+    connect(core()->projectController(), &KDevelop::IProjectController::projectOpened, [this](IProject* project) {
+        if (project->buildSystemManager() == this)
+        {
+            CargoFindTestsJob* findTestsJob = new CargoFindTestsJob(this, project->projectItem());
+            core()->runController()->registerJob(findTestsJob);
+        }
+    });
 }
 
 CargoPlugin::~CargoPlugin()

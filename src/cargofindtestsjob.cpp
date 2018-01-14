@@ -43,10 +43,56 @@
 
 using namespace KDevelop;
 
+class JobList : public KJob
+{
+public:
+    JobList(const QList<KJob*> jobs)
+    : KJob()
+    , jobs(jobs)
+    {
+        KJob::Capabilities capabilities = Killable | Suspendable;
+        for (KJob* job : jobs)
+        {
+            capabilities &= job->capabilities();
+        }
+        setCapabilities(capabilities);
+    }
+
+    void start() override
+    {
+        for (KJob* job : jobs)
+        {
+            job->start();
+        }
+    }
+
+    bool doKill() override
+    {
+        bool ok = true;
+        for (KJob* job : jobs)
+        {
+            ok &= job->kill();
+        }
+        return ok;
+    }
+
+    bool doSuspend() override
+    {
+        bool ok = true;
+        for (KJob* job : jobs)
+        {
+            ok &= job->suspend();
+        }
+        return ok;
+    }
+
+    QList<KJob*> jobs;
+};
+
 class CargoTestSuite : public KDevelop::ITestSuite
 {
 public:
-    CargoTestSuite(const QString& suiteName, const Path& executable, const QStringList& cases, IProject* project);
+    CargoTestSuite(const QString& suiteName, const Path& executable, const QStringList& cases, const QStringList& ignoredCases, IProject* project);
     virtual ~CargoTestSuite();
 
     QString name() const override { return m_suiteName; }
@@ -65,6 +111,11 @@ public:
         return IndexedDeclaration();
     }
 
+    bool isIgnored(const QString& caseName)
+    {
+        return m_ignoredCases.contains(caseName);
+    }
+
     KJob * launchCase(const QString & testCase, KDevelop::ITestSuite::TestJobVerbosity verbosity) override;
     KJob * launchAllCases(KDevelop::ITestSuite::TestJobVerbosity verbosity) override;
     KJob * launchCases(const QStringList & testCases, KDevelop::ITestSuite::TestJobVerbosity verbosity) override;
@@ -73,14 +124,16 @@ private:
     QString m_suiteName;
     Path m_executable;
     QStringList m_cases;
+    QStringList m_ignoredCases;
     IProject* m_project;
 };
 
-CargoTestSuite::CargoTestSuite(const QString& suiteName, const Path& executable, const QStringList& cases, IProject* project)
-: m_suiteName(suiteName)
-, m_executable(executable)
-, m_cases(cases)
-, m_project(project)
+CargoTestSuite::CargoTestSuite(const QString& suiteName, const KDevelop::Path& executable, const QStringList& cases, const QStringList& ignoredCases, KDevelop::IProject* project)
+ : m_suiteName(suiteName)
+ , m_executable(executable)
+ , m_cases(cases)
+ , m_ignoredCases(ignoredCases)
+ , m_project(project)
 {}
 
 CargoTestSuite::~CargoTestSuite()
@@ -91,11 +144,30 @@ class CargoRunTestsJob : public KDevelop::OutputJob
     Q_OBJECT
 public:
     CargoRunTestsJob(CargoTestSuite* suite, const QString& caseName, KDevelop::ITestSuite::TestJobVerbosity verbosity)
-    : killed(false)
+    : KDevelop::OutputJob()
+    , killed(false)
     , suite(suite)
     , caseName(caseName)
     , verbosity(verbosity)
     {
+    }
+
+    TestResult::TestCaseResult parseResult(const QString& res)
+    {
+        if (res == QStringLiteral("ok"))
+        {
+            return TestResult::Passed;
+        }
+        else if (res == QStringLiteral("FAILED"))
+        {
+            return TestResult::Failed;
+        }
+        else if (res == QStringLiteral("ignored"))
+        {
+            return TestResult::NotRun;
+        }
+
+        return TestResult::Error;
     }
 
     void start() override
@@ -112,6 +184,13 @@ public:
         if (!caseName.isEmpty())
         {
             arguments << QStringLiteral("--exact") << caseName;
+
+            if (suite->isIgnored(caseName))
+            {
+                // When running a single test case, we also allow running ignored cases.
+                // They will only be skipped when running the whole suite.
+                arguments << QStringLiteral("--ignored");
+            }
         }
 
         setStandardToolView( KDevelop::IOutputView::TestView );
@@ -131,7 +210,24 @@ public:
         connect( exec, &CommandExecutor::failed, this, &CargoRunTestsJob::procError );
 
         connect( exec, &CommandExecutor::receivedStandardError, model, &OutputModel::appendLines );
-        connect( exec, &CommandExecutor::receivedStandardOutput, model, &OutputModel::appendLines );
+        connect( exec, &CommandExecutor::receivedStandardOutput, [this, model](const QStringList& lines) {
+            model->appendLines(lines);
+
+            for (auto& line : lines)
+            {
+                qCDebug(KDEV_CARGO) << "Received output line" << line;
+                QStringList elements = line.split(' ');
+                if (elements.size() == 4 && elements[0] == QStringLiteral("test"))
+                {
+                    QString testCase = elements[1];
+                    TestResult::TestCaseResult result = parseResult(elements[3]);
+
+                    qCDebug(KDEV_CARGO) << "Received test case result" << testCase << elements[3] << result;
+
+                    caseResults.insert(testCase, result);
+                }
+            }
+        });
 
         model->appendLine( QStringLiteral("Test %1 %2").arg( suite->name() ).arg( caseName ) );
         exec->start();
@@ -154,6 +250,7 @@ private:
     QString caseName;
     ITestSuite::TestJobVerbosity verbosity;
     KDevelop::CommandExecutor* exec;
+    QHash<QString, TestResult::TestCaseResult> caseResults;
 };
 
 
@@ -176,26 +273,16 @@ void CargoRunTestsJob::procFinished(int code)
 {
     TestResult result;
 
-    if( code != 0 ) {
-        setError( FailedShownError );
+    if (code != 0) {
+        setError(FailedShownError);
         result.suiteResult = TestResult::Failed;
-        if (!caseName.isEmpty())
-        {
-            result.testCaseResults.insert(caseName, TestResult::Failed);
-        }
     } else {
         result.suiteResult = TestResult::Passed;
-        if (!caseName.isEmpty())
-        {
-            result.testCaseResults.insert(caseName, TestResult::Passed);
-        }
-        else
-        {
-            for (const auto& caseName : suite->cases())
-            {
-                result.testCaseResults.insert(caseName, TestResult::Passed);
-            }
-        }
+    }
+
+    for (auto it = caseResults.constBegin(); it != caseResults.constEnd(); ++it)
+    {
+        result.testCaseResults.insert(it.key(), it.value());
     }
 
     ICore::self()->testController()->notifyTestRunFinished(suite, result);
@@ -205,7 +292,23 @@ void CargoRunTestsJob::procFinished(int code)
 
 KJob* CargoTestSuite::launchCases(const QStringList & testCases, KDevelop::ITestSuite::TestJobVerbosity verbosity)
 {
-    return nullptr;
+    /*
+     * Rust test executable have no way of specifying a list of test cases to run.
+     * Either all test cases, or only a single test case can be specified at a time.
+     *
+     * To work around this, when a list of tests is specified, we run one job per test case,
+     * and run exactly one test case in each job.
+     */
+
+    Q_UNUSED(verbosity);
+    // We do not want to run multiple verbose jobs at the same time
+
+    QList<KJob*> jobs;
+    for (auto& testCase : testCases)
+    {
+        jobs << launchCase(testCase, Silent);
+    }
+    return new JobList(jobs);
 }
 
 KJob * CargoTestSuite::launchCase(const QString& testCase, KDevelop::ITestSuite::TestJobVerbosity verbosity)
@@ -289,6 +392,29 @@ void CargoFindTestsJob::start()
 
         exec->start();
         executors.append(exec);
+
+        /*
+         * We separately track the list of ignored test cases.
+         * This is needed for the ability to run individual ignored test cases.
+         */
+
+        exec = new KDevelop::CommandExecutor( executable, this );
+        exec->setArguments(QStringList() << QStringLiteral("--list") << QStringLiteral("--ignored"));
+        exec->setWorkingDirectory(builddir);
+
+        connect(exec, &CommandExecutor::completed, [this, suiteName, executable](int code){
+            procFinished(suiteName, executable, code);
+        } );
+        connect(exec, &CommandExecutor::failed, [this, suiteName](QProcess::ProcessError error){
+            procError(suiteName, error);
+        });
+
+        connect(exec, &CommandExecutor::receivedStandardOutput, [this, suiteName](const QStringList& output) {
+            addIgnoredCases(suiteName, output);
+        });
+
+        exec->start();
+        executors.append(exec);
     }
 }
 
@@ -309,7 +435,10 @@ void CargoFindTestsJob::procFinished(const QString& suiteName, const QString& ex
 
     if (suiteCases.contains(suiteName))
     {
-        CargoTestSuite* suite = new CargoTestSuite(suiteName, Path(executable), suiteCases[suiteName], project);
+        QStringList all = suiteCases[suiteName];
+        QStringList ignored = ignoredCases.value(suiteName);
+
+        CargoTestSuite* suite = new CargoTestSuite(suiteName, Path(executable), all, ignored, project);
         plugin->core()->testController()->addTestSuite(suite);
     }
 
@@ -347,6 +476,27 @@ void CargoFindTestsJob::addSuiteCases(const QString& suiteName, const QStringLis
             qCDebug(KDEV_CARGO) << "Adding case" << elements[0] << "to suite" << suiteName;
 
             suiteCases[suiteName] << elements[0];
+        }
+    }
+}
+
+void CargoFindTestsJob::addIgnoredCases(const QString& suiteName, const QStringList& lines)
+{
+    qCDebug(KDEV_CARGO) << "Received ignored lines for suite" << suiteName;
+
+    if (!ignoredCases.contains(suiteName))
+    {
+        ignoredCases.insert(suiteName, QStringList());
+    }
+
+    for (const auto& line : lines)
+    {
+        QStringList elements = line.split(QStringLiteral(": "));
+        if (elements.size() == 2 && elements[1] == QStringLiteral("test"))
+        {
+            qCDebug(KDEV_CARGO) << "Adding ignored case" << elements[0] << "to suite" << suiteName;
+
+            ignoredCases[suiteName] << elements[0];
         }
     }
 }

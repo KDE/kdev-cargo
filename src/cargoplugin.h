@@ -30,8 +30,6 @@
 #include <execute/iexecuteplugin.h>
 #include <kdevplatform_version.h>
 
-#define VERSION_5_2 ((5<<16)|(2<<8)|(0))
-
 class KConfigGroup;
 class KDialogBase;
 class CargoExecutionConfigType;
