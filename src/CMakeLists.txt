@@ -24,5 +24,7 @@ target_link_libraries(kdevcargo
       KDev::OutputView
 )
 
-## Unittests
-add_subdirectory( tests )
+## Unittests are only built if KDevPlatform was built with testing support
+if (TARGET KDev::Tests)
+    add_subdirectory(tests)
+endif (TARGET KDev::Tests)

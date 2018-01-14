@@ -10,6 +10,7 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMQtDeclareLoggingCategory)
 include(ECMInstallIcons)
+include(ECMAddTests)
 include(FeatureSummary)
 
 find_package(KDevPlatform 5.0 REQUIRED)
@@ -17,6 +18,7 @@ find_package(KF5 5.15.0 REQUIRED COMPONENTS
     I18n
     ItemModels # needed because missing in KDevPlatformConfig.cmake, remove once dep on kdevplatform >=5.2.2
 )
+find_package(Qt5Test 5.5.0 CONFIG REQUIRED)
 find_package(Cargo QUIET)
 set_package_properties(Cargo PROPERTIES
     TYPE RUNTIME
