@@ -1,0 +1,4 @@
+[Project]
+CreatedFrom=Cargo.toml
+Manager=KDevCargo
+Name=kdev-cargo-test
