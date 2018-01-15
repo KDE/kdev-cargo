@@ -47,6 +47,7 @@ public:
     };
 
     CargoFindTestsJob(CargoPlugin*, KDevelop::ProjectBaseItem*);
+
     void start() override;
     bool doKill() override;
 

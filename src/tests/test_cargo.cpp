@@ -75,12 +75,17 @@ IProject* loadProject(const QString& name)
 
 void CargoPluginTest::initTestCase()
 {
-    AutoTestShell::init();
+    AutoTestShell::init({
+        QStringLiteral("KDevCargo"),
+        QStringLiteral("KDevStandardOutputView"),
+    });
     TestCore::initialize();
 
     qRegisterMetaType<KDevelop::IProject*>();
     qRegisterMetaType<KDevelop::ITestSuite*>();
     qRegisterMetaType<KDevelop::TestResult>();
+
+    qDebug() << Core::self()->pluginController()->loadedPlugins();
 
     cleanup();
 }
@@ -92,7 +97,6 @@ void CargoPluginTest::cleanupTestCase()
 
 void CargoPluginTest::cleanup()
 {
-    QTest::qWait(200);
     Core::self()->projectController()->closeAllProjects();
 }
 

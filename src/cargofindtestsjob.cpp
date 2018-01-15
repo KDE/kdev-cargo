@@ -257,10 +257,14 @@ private:
 void CargoRunTestsJob::procError( QProcess::ProcessError err )
 {
     Q_UNUSED(err);
-    if( !killed ) {
-        setError( FailedShownError );
-        setErrorText( i18n( "Error running test command." ) );
+
+    if (killed)
+    {
+        return;
     }
+
+    setError( FailedShownError );
+    setErrorText( i18n( "Error running test command." ) );
 
     TestResult result;
     result.suiteResult = TestResult::Error;
@@ -271,6 +275,11 @@ void CargoRunTestsJob::procError( QProcess::ProcessError err )
 
 void CargoRunTestsJob::procFinished(int code)
 {
+    if (killed)
+    {
+        return;
+    }
+
     TestResult result;
 
     if (code != 0) {
@@ -379,14 +388,14 @@ void CargoFindTestsJob::start()
         exec->setArguments(QStringList() << QStringLiteral("--list"));
         exec->setWorkingDirectory(builddir);
 
-        connect(exec, &CommandExecutor::completed, [this, suiteName, executable](int code){
+        connect(exec, &CommandExecutor::completed, this, [this, suiteName, executable](int code){
             procFinished(suiteName, executable, code);
         } );
-        connect(exec, &CommandExecutor::failed, [this, suiteName](QProcess::ProcessError error){
+        connect(exec, &CommandExecutor::failed, this, [this, suiteName](QProcess::ProcessError error){
             procError(suiteName, error);
         });
 
-        connect(exec, &CommandExecutor::receivedStandardOutput, [this, suiteName](const QStringList& output) {
+        connect(exec, &CommandExecutor::receivedStandardOutput, this, [this, suiteName](const QStringList& output) {
             addSuiteCases(suiteName, output);
         });
 
@@ -402,14 +411,14 @@ void CargoFindTestsJob::start()
         exec->setArguments(QStringList() << QStringLiteral("--list") << QStringLiteral("--ignored"));
         exec->setWorkingDirectory(builddir);
 
-        connect(exec, &CommandExecutor::completed, [this, suiteName, executable](int code){
+        connect(exec, &CommandExecutor::completed, this, [this, suiteName, executable](int code){
             procFinished(suiteName, executable, code);
         } );
-        connect(exec, &CommandExecutor::failed, [this, suiteName](QProcess::ProcessError error){
+        connect(exec, &CommandExecutor::failed, this, [this, suiteName](QProcess::ProcessError error){
             procError(suiteName, error);
         });
 
-        connect(exec, &CommandExecutor::receivedStandardOutput, [this, suiteName](const QStringList& output) {
+        connect(exec, &CommandExecutor::receivedStandardOutput, this, [this, suiteName](const QStringList& output) {
             addIgnoredCases(suiteName, output);
         });
 
@@ -430,6 +439,11 @@ bool CargoFindTestsJob::doKill()
 
 void CargoFindTestsJob::procFinished(const QString& suiteName, const QString& executable, int)
 {
+    if (killed)
+    {
+        return;
+    }
+
     qCDebug(KDEV_CARGO) << "Proc finished" << suiteName;
     numExecutorsFinished++;
 
@@ -450,6 +464,11 @@ void CargoFindTestsJob::procFinished(const QString& suiteName, const QString& ex
 
 void CargoFindTestsJob::procError(const QString& suiteName, QProcess::ProcessError err)
 {
+    if (killed)
+    {
+        return;
+    }
+
     qCDebug(KDEV_CARGO) << "Proc error" << suiteName << err;
     numExecutorsFinished++;
 
