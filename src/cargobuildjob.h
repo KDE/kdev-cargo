@@ -70,7 +70,7 @@ private:
     QString builddir;
     QUrl installPrefix;
     QStringList runArguments;
-    KDevelop::CommandExecutor* exec;
+    KDevelop::CommandExecutor* executor;
     bool killed;
     bool enabled;
     KDevelop::IOutputView::StandardToolView standardViewType;

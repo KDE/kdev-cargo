@@ -152,7 +152,7 @@ KDevelop::FilteredItem CargoFilterStrategy::actionInLine(const QString& line)
 CargoBuildJob::CargoBuildJob( CargoPlugin* plugin, KDevelop::ProjectBaseItem* item, const QString& command )
     : OutputJob( plugin )
     , command( command)
-    , exec(nullptr)
+    , executor(nullptr)
     , killed( false )
     , enabled( false )
 {
@@ -201,26 +201,26 @@ void CargoBuildJob::start()
 
         startOutput();
 
-        exec = new KDevelop::CommandExecutor( cmd, this );
+        executor = new KDevelop::CommandExecutor( cmd, this );
 
-        exec->setArguments( arguments );
-        exec->setWorkingDirectory( builddir );
+        executor->setArguments( arguments );
+        executor->setWorkingDirectory( builddir );
         
-        connect( exec, &CommandExecutor::completed, this, &CargoBuildJob::procFinished );
-        connect( exec, &CommandExecutor::failed, this, &CargoBuildJob::procError );
+        connect( executor, &CommandExecutor::completed, this, &CargoBuildJob::procFinished );
+        connect( executor, &CommandExecutor::failed, this, &CargoBuildJob::procError );
 
-        connect( exec, &CommandExecutor::receivedStandardError, model, &OutputModel::appendLines );
-        connect( exec, &CommandExecutor::receivedStandardOutput, model, &OutputModel::appendLines );
+        connect( executor, &CommandExecutor::receivedStandardError, model, &OutputModel::appendLines );
+        connect( executor, &CommandExecutor::receivedStandardOutput, model, &OutputModel::appendLines );
 
         model->appendLine( QStringLiteral("%1> %2 %3").arg( builddir ).arg( cmd ).arg( KShell::joinArgs(arguments) ) );
-        exec->start();
+        executor->start();
     }
 }
 
 bool CargoBuildJob::doKill()
 {
     killed = true;
-    exec->kill();
+    executor->kill();
     return true;
 }
 

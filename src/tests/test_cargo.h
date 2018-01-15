@@ -34,6 +34,18 @@ class CargoPluginTest: public QObject
 private Q_SLOTS:
     void initTestCase();
     void cleanupTestCase();
+
+    void cleanup();
+
+    void testOpenProject();
+    void testBuildProject();
+    void testFindTests();
+    void testRunTests();
+    void testRunSingleCases();
+    void testRunIgnoredCases();
+
+private:
+    CargoPlugin* m_plugin;
 };
 
 #endif // KDEV_CARGO_TEST_H

@@ -72,7 +72,7 @@ CargoPlugin::CargoPlugin( QObject *parent, const QVariantList & )
     m_runTestsAction->setIcon(QIcon::fromTheme(QStringLiteral("system-run")));
     m_runTestsAction->setText(i18n("Run Cargo Tests"));
 
-    QLoggingCategory::setFilterRules(QStringLiteral("kdevelop.projectmanagers.cargo.debug = true"));
+    // QLoggingCategory::setFilterRules(QStringLiteral("kdevelop.projectmanagers.cargo.debug = true"));
 
     connect(core()->projectController(), &KDevelop::IProjectController::projectOpened, [this](IProject* project) {
         if (project->buildSystemManager() == this)
