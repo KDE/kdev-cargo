@@ -30,11 +30,13 @@
 #include <interfaces/itestsuite.h>
 #include <interfaces/icore.h>
 #include <interfaces/itestcontroller.h>
+#include <interfaces/iruncontroller.h>
 #include <outputview/outputmodel.h>
 #include <outputview/outputdelegate.h>
 #include <outputview/filtereditem.h>
 #include <outputview/outputfilteringstrategies.h>
 #include <util/commandexecutor.h>
+#include <util/executecompositejob.h>
 #include <project/projectmodel.h>
 #include <language/duchain/indexeddeclaration.h>
 
@@ -42,52 +44,6 @@
 #include "debug.h"
 
 using namespace KDevelop;
-
-class JobList : public KJob
-{
-public:
-    JobList(const QList<KJob*> jobs)
-    : KJob()
-    , jobs(jobs)
-    {
-        KJob::Capabilities capabilities = Killable | Suspendable;
-        for (KJob* job : jobs)
-        {
-            capabilities &= job->capabilities();
-        }
-        setCapabilities(capabilities);
-    }
-
-    void start() override
-    {
-        for (KJob* job : jobs)
-        {
-            job->start();
-        }
-    }
-
-    bool doKill() override
-    {
-        bool ok = true;
-        for (KJob* job : jobs)
-        {
-            ok &= job->kill();
-        }
-        return ok;
-    }
-
-    bool doSuspend() override
-    {
-        bool ok = true;
-        for (KJob* job : jobs)
-        {
-            ok &= job->suspend();
-        }
-        return ok;
-    }
-
-    QList<KJob*> jobs;
-};
 
 class CargoTestSuite : public KDevelop::ITestSuite
 {
@@ -231,6 +187,15 @@ public:
 
         model->appendLine( QStringLiteral("Test %1 %2").arg( suite->name() ).arg( caseName ) );
         exec->start();
+
+        if (caseName.isEmpty())
+        {
+            ICore::self()->testController()->notifyTestRunStarted(suite, {caseName});
+        }
+        else
+        {
+            ICore::self()->testController()->notifyTestRunStarted(suite, suite->cases());
+        }
     }
 
     bool doKill() override
@@ -317,7 +282,7 @@ KJob* CargoTestSuite::launchCases(const QStringList & testCases, KDevelop::ITest
     {
         jobs << launchCase(testCase, Silent);
     }
-    return new JobList(jobs);
+    return new ExecuteCompositeJob(ICore::self()->runController(), jobs);
 }
 
 KJob * CargoTestSuite::launchCase(const QString& testCase, KDevelop::ITestSuite::TestJobVerbosity verbosity)
