@@ -22,9 +22,10 @@
 
 #include "test_cargo.h"
 #include "cargo-test-paths.h"
-#include "../cargobuildjob.h"
-#include "../cargofindtestsjob.h"
-#include "../cargoplugin.h"
+#include "cargobuildjob.h"
+#include "cargofindtestsjob.h"
+#include "cargoplugin.h"
+#include "debug.h"
 
 #include <QTest>
 #include <QSignalSpy>
@@ -75,6 +76,8 @@ IProject* loadProject(const QString& name)
 
 void CargoPluginTest::initTestCase()
 {
+    QLoggingCategory::setFilterRules(QStringLiteral("kdevelop.projectmanagers.cargo.debug = true"));
+
     AutoTestShell::init({
         QStringLiteral("KDevCargo"),
         QStringLiteral("KDevStandardOutputView"),
