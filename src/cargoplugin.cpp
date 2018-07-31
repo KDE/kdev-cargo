@@ -26,6 +26,7 @@
 #include <KLocalizedString>
 #include <KConfigGroup>
 #include <KShell>
+#include <QAction>
 #include <QDebug>
 
 #include <project/projectmodel.h>
