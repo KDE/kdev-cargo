@@ -12,6 +12,7 @@
         "Description[ca]": "Permet emprar el Cargo per a crear els projectes en Rust",
         "Description[cs]": "Umožňuje použít Cargo pro sestavení projektů v Rustu",
         "Description[es]": "Permite usar Cargo para compilar proyectos de Rust",
+        "Description[fi]": "Mahdollistaa Cargon käytön Rust-projektien koostamiseksi",
         "Description[fr]": "Permet d'utiliser Cargo pour compiler des projets Rust",
         "Description[gl]": "Permite usar Cargo para construír proxectos de Rust.",
         "Description[it]": "Permette di usare Cargo per compilare progetti Rust",
