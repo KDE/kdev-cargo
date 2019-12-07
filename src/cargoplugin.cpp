@@ -186,6 +186,13 @@ QList<ProjectTargetItem*> CargoPlugin::targets( ProjectFolderItem* ) const
     return QList<ProjectTargetItem*>();
 }
 
+KDevelop::Path CargoPlugin::compiler(KDevelop::ProjectTargetItem* p) const
+{
+    Q_UNUSED(p)
+
+    return KDevelop::Path(QStandardPaths::findExecutable(QStringLiteral("cargo")));
+}
+
 int CargoPlugin::perProjectConfigPages() const
 {
     return 0;

@@ -86,6 +86,7 @@ public:
     bool removeFilesFromTargets( const QList<KDevelop::ProjectFileItem*>& ) override;
     bool removeTarget( KDevelop::ProjectTargetItem* target ) override;
     QList<KDevelop::ProjectTargetItem*> targets( KDevelop::ProjectFolderItem* ) const override;
+    KDevelop::Path compiler(KDevelop::ProjectTargetItem * p) const override;
 
     QString extraArguments(KDevelop::ProjectBaseItem* item) const override;
 

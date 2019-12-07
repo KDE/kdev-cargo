@@ -22,6 +22,10 @@ set_package_properties(Cargo PROPERTIES
     TYPE RUNTIME
 )
 
+if (NOT TARGET KDev::Test)
+    set(BUILD_TESTING OFF)
+endif ()
+
 if (BUILD_TESTING)
     include(ECMAddTests)
     find_package(Qt5Test 5.5.0 CONFIG REQUIRED)
